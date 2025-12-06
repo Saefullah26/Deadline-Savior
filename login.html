@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Savior</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles jika diperlukan, di luar Tailwind */
+        /* Contoh: Override default Tailwind atau tambahan styling */
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Responsivitas tambahan jika perlu */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center mb-6">Login atau Signup</h1>
+        <div id="login-form">
+            <h2 class="text-xl font-semibold mb-4">Login</h2>
+            <form id="login-form-element">
+                <div class="mb-4">
+                    <label for="login-username" class="block text-gray-700">Username</label>
+                    <input type="text" id="login-username" placeholder="Masukkan username Anda"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label for="login-password" class="block text-gray-700">Password</label>
+                    <input type="password" id="login-password"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Login</button>
+            </form>
+            <p class="mt-4 text-center">Belum punya akun? <a href="#" id="switch-to-signup"
+                    class="text-blue-600 hover:underline">Signup</a></p>
+        </div>
+        <div id="signup-form" class="hidden">
+            <h2 class="text-xl font-semibold mb-4">Signup</h2>
+            <form id="signup-form-element">
+                <div class="mb-4">
+                    <label for="signup-name" class="block text-gray-700">Nama</label>
+                    <input type="text" id="signup-name"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label for="signup-username" class="block text-gray-700">Username</label>
+                    <input type="text" id="signup-username" placeholder="Masukkan username Anda"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label for="signup-password" class="block text-gray-700">Password</label>
+                    <input type="password" id="signup-password"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+                <button type="submit"
+                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Signup</button>
+            </form>
+            <p class="mt-4 text-center">Sudah punya akun? <a href="#" id="switch-to-login"
+                    class="text-blue-600 hover:underline">Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------------
+        // KONFIGURASI ADMIN
+        // ------------------------------------
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'supersecretpassword'; // Ganti dengan password yang lebih aman!
+        const ADMIN_NAME = 'Administrator';
+        const ADMIN_DATA = { name: ADMIN_NAME, username: ADMIN_USERNAME, password: ADMIN_PASSWORD, role: 'admin' };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // ------------------------------------
+            // 1. LOGIKA SWITCH LOGIN/SIGNUP
+            // ------------------------------------
+            const switchToSignup = document.getElementById('switch-to-signup');
+            const switchToLogin = document.getElementById('switch-to-login');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+
+            if (switchToSignup && loginForm && signupForm) {
+                switchToSignup.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginForm.classList.add('hidden');
+                    signupForm.classList.remove('hidden');
+                });
+            }
+
+            if (switchToLogin && loginForm && signupForm) {
+                switchToLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    signupForm.classList.add('hidden');
+                    loginForm.classList.remove('hidden');
+                });
+            }
+        }); // END OF DOMContentLoaded
+
+        // ------------------------------------
+        // LOGIKA FORM YANG BERJALAN DI LUAR DOMContentLoaded
+        // ------------------------------------
+
+        // Handle login form submission
+        const loginFormElement = document.getElementById('login-form-element');
+        if (loginFormElement) {
+            loginFormElement.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!username || !password) {
+                    alert('Harap isi semua field!');
+                    return;
+                }
+                
+                // 1. CEK LOGIN ADMIN
+                if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    // Simpan data admin dengan role: 'admin'
+                    localStorage.setItem('user', JSON.stringify(ADMIN_DATA)); 
+                    alert(`Login Admin berhasil! Selamat datang, ${ADMIN_NAME}.`);
+                    window.location.href = 'admin.html'; // Redirect ke halaman admin
+                    loginFormElement.reset();
+                    return; // Hentikan proses lebih lanjut
+                }
+
+                // 2. CEK LOGIN PENGGUNA REGULER
+                const storedUser = JSON.parse(localStorage.getItem('user'));
+                if (storedUser && storedUser.username === username && storedUser.password === password) {
+                    // Simpan status login pengguna reguler
+                    localStorage.setItem('isLoggedIn', 'true');
+                    // Pastikan user data yang disimpan tidak mengandung role admin jika dia bukan admin
+                    const regularUserData = { name: storedUser.name, username: storedUser.username, password: storedUser.password, role: 'user' };
+                    localStorage.setItem('user', JSON.stringify(regularUserData)); 
+                    alert(`Login berhasil! Selamat datang, ${storedUser.name}.`);
+                    // Redirect ke home untuk pengguna reguler
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Username atau password salah!');
+                }
+                
+                loginFormElement.reset();
+            });
+        }
+
+        // Handle signup form submission
+        const signupFormElement = document.getElementById('signup-form-element');
+        if (signupFormElement) {
+            signupFormElement.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('signup-name').value;
+                const username = document.getElementById('signup-username').value;
+                const password = document.getElementById('signup-password').value;
+                
+                if (!name || !username || !password) {
+                    alert('Harap isi semua field!');
+                    return;
+                }
+                
+                // Check if username is the reserved admin username
+                if (username === ADMIN_USERNAME) {
+                    alert('Username tidak valid.');
+                    return;
+                }
+
+                // Check if username already exists for regular user
+                const existingUser = JSON.parse(localStorage.getItem('user'));
+                if (existingUser && existingUser.username === username) {
+                    alert('Username sudah digunakan. Pilih username lain.');
+                    return;
+                }
+                
+                // Store user data in localStorage (simulate database) with role: 'user'
+                const userData = { name, username, password, role: 'user' };
+                localStorage.setItem('user', JSON.stringify(userData));
+                
+                alert(`Signup berhasil! Akun untuk ${name} telah dibuat.`);
+                
+                signupFormElement.reset();
+                // Optionally switch back to login form
+                document.getElementById('signup-form').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
+            });
+        }
+    </script>
+</body>
+
+</html>

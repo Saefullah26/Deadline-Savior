@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Savior</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* File CSS terpisah untuk animasi custom */
+        /* Tailwind sudah menangani sebagian besar, tapi ini untuk kustomisasi */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Animasi fade-in untuk elemen utama */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Animasi slide-up untuk ringkasan di success.html */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 1s ease-out 0.5s both; /* Delay 0.5s agar muncul setelah fade-in */
+        }
+
+        /* Transisi untuk input dan tombol */
+        input, button {
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-4 animate-fade-in">
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Formulir Pembelian</h1>
+        <form id="purchaseForm" action="success.html" method="get" class="space-y-4">
+            
+            <div class="p-3 bg-indigo-50 border-l-4 border-indigo-500 text-sm text-indigo-700 font-medium">
+                Anda memesan Layanan: <span id="serviceDisplay" class="font-bold text-indigo-900">Memuat...</span>
+            </div>
+            
+            <input type="hidden" id="hiddenService" name="service" value="" required>
+
+            <div>
+                <label for="fullName" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-300">
+            </div>
+            
+            <div>
+                <label for="contactDetail" id="contactDetailLabel" class="block text-sm font-medium text-gray-700">Detail Kontak (Akan diubah berdasarkan Preferensi)</label>
+                <input type="text" id="contactDetail" name="contactDetail" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-300">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Preferensi Kontak</label>
+                <div class="mt-2 space-y-2">
+                    <div class="flex items-center">
+                        <input type="radio" id="contactGmail" name="contactPreference" value="gmail" required class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <label for="contactGmail" class="ml-2 block text-sm text-gray-900">Gmail</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="contactWhatsApp" name="contactPreference" value="whatsapp" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <label for="contactWhatsApp" class="ml-2 block text-sm text-gray-900">WhatsApp</label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
+                <span id="btnText">Kirim</span>
+                <div id="loadingSpinner" class="hidden inline-block ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </button>
+        </form>
+        <footer class="mt-6 text-center text-sm text-gray-500">
+            Pastikan semua data sudah benar sebelum mengirim.
+        </footer>
+    </div>
+    <script>
+        // JavaScript terpisah untuk logika dan animasi
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialService = urlParams.get('service'); // Ambil layanan dari URL
+
+            // --- Untuk form.html: Logika Form dan Validasi ---
+            const form = document.getElementById('purchaseForm');
+            
+            if (form) {
+                const contactDetailInput = document.getElementById('contactDetail');
+                const contactDetailLabel = document.getElementById('contactDetailLabel');
+                const radioGmail = document.getElementById('contactGmail');
+                const radioWhatsApp = document.getElementById('contactWhatsApp');
+                const hiddenService = document.getElementById('hiddenService');
+                const serviceDisplay = document.getElementById('serviceDisplay');
+
+                // 1. Inisialisasi Layanan dari URL
+                if (initialService) {
+                    // Decode parameter URL dan tampilkan/simpan
+                    const formattedService = decodeURIComponent(initialService.replace(/\+/g, ' '));
+                    hiddenService.value = formattedService;
+                    serviceDisplay.textContent = formattedService;
+                } else {
+                    // Jika tidak ada parameter layanan di URL
+                    serviceDisplay.textContent = 'TIDAK DITEMUKAN. Harap kembali ke halaman Layanan.';
+                    alert('Kesalahan: Parameter layanan tidak ditemukan di URL. Formulir tidak dapat diproses. Silakan kembali ke halaman Layanan.');
+                    
+                    // Matikan form
+                    form.addEventListener('submit', (e) => e.preventDefault());
+                    document.getElementById('submitBtn').disabled = true;
+                    return; 
+                }
+
+                // Fungsi untuk validasi nomor telepon (hanya angka)
+                function isValidPhoneNumber(phone) {
+                    // Memungkinkan angka, spasi, tanda kurung, strip, dan '+' di awal, minimal 8 digit angka.
+                    return /^\+?[0-9\s-()]{8,}$/.test(phone.trim());
+                }
+
+                // Fungsi untuk validasi format email
+                function isValidEmail(email) {
+                    // Regex standar untuk validasi email
+                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+                }
+
+                // --- Fungsi untuk memperbarui Input Detail Kontak (GMAIL/WHATSAPP) ---
+                function updateContactDetailInput(preference) {
+                    contactDetailInput.value = ''; // Kosongkan saat berganti preferensi
+                    if (preference === 'whatsapp') {
+                        contactDetailLabel.textContent = 'Nomor Telepon (untuk WhatsApp)';
+                        contactDetailInput.setAttribute('type', 'tel');
+                        // Penting: Ganti nama input untuk dikirim ke success.html
+                        contactDetailInput.setAttribute('name', 'phoneNumber'); 
+                        contactDetailInput.setAttribute('placeholder', 'Contoh: 0812xxxxxxxx');
+                    } else if (preference === 'gmail') {
+                        contactDetailLabel.textContent = 'Alamat Gmail';
+                        contactDetailInput.setAttribute('type', 'email');
+                        // Penting: Ganti nama input untuk dikirim ke success.html
+                        contactDetailInput.setAttribute('name', 'gmailAddress'); 
+                        contactDetailInput.setAttribute('placeholder', 'Contoh: nama.anda@gmail.com');
+                    }
+                }
+
+                // Event listener untuk radio button dan inisialisasi awal (default ke Gmail)
+                radioGmail.addEventListener('change', (e) => updateContactDetailInput(e.target.value));
+                radioWhatsApp.addEventListener('change', (e) => updateContactDetailInput(e.target.value));
+                
+                radioGmail.checked = true;
+                updateContactDetailInput('gmail');
+
+                // --- Event Submit Form ---
+                form.addEventListener('submit', function(event) {
+                    const fullName = document.getElementById('fullName').value.trim();
+                    const contactDetail = contactDetailInput.value.trim(); 
+                    const contactPreference = document.querySelector('input[name="contactPreference"]:checked').value;
+                    
+                    // 1. Validasi Keberadaan Data
+                    if (!fullName || !contactDetail) {
+                        alert('Harap isi semua field.');
+                        event.preventDefault();
+                        return;
+                    }
+                    
+                    // 2. Validasi Format Data berdasarkan Preferensi
+                    let validationError = '';
+                    
+                    if (contactPreference === 'whatsapp') {
+                        if (!isValidPhoneNumber(contactDetail)) {
+                            validationError = 'Nomor Telepon untuk WhatsApp harus berupa angka yang valid (minimal 8 digit).';
+                            contactDetailInput.focus();
+                        }
+                    } else if (contactPreference === 'gmail') {
+                        if (!isValidEmail(contactDetail)) {
+                            validationError = 'Alamat Gmail harus dalam format email yang valid (contoh: nama@gmail.com).';
+                            contactDetailInput.focus();
+                        }
+                    }
+                    
+                    if (validationError) {
+                        alert(validationError);
+                        event.preventDefault();
+                        return;
+                    }
+                    
+                    // Animasi loading
+                    const btnText = document.getElementById('btnText');
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    const submitBtn = document.getElementById('submitBtn');
+                    
+                    btnText.classList.add('hidden');
+                    loadingSpinner.classList.remove('hidden');
+                    submitBtn.disabled = true; 
+                    
+                    setTimeout(() => {
+                        form.submit(); 
+                    }, 1000); 
+                });
+            }
+        });
+    </script>
+</body>
+</html>

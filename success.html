@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Savior</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* File CSS terpisah untuk animasi custom */
+        /* Tailwind sudah menangani sebagian besar, tapi ini untuk kustomisasi */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Animasi fade-in untuk elemen utama */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Animasi slide-up untuk ringkasan di success.html */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 1s ease-out 0.5s both; /* Delay 0.5s agar muncul setelah fade-in */
+        }
+
+        /* Transisi untuk input dan tombol */
+        input, button {
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-4 animate-fade-in">
+        <h1 class="text-2xl font-bold text-center mb-6 text-green-600">Pembelian Berhasil!</h1>
+        <div id="summary" class="space-y-4 slide-up">
+            </div>
+        <button onclick="window.location.href='index.html'" class="w-full mt-6 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">Kembali ke home</button>
+    </div>
+    <script>
+        // JavaScript terpisah untuk logika dan animasi
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Kode untuk success.html saja yang relevan, karena form.html sudah ada di file terpisah
+
+            // --- Untuk success.html: Tampilkan Ringkasan ---
+            if (window.location.pathname.includes('success.html')) {
+                const fullName = urlParams.get('fullName');
+                const service = urlParams.get('service'); // Ambil parameter service
+                
+                // Ambil contactDetail dari salah satu parameter yang mungkin ada
+                const contactPreference = urlParams.get('contactPreference');
+                const contactDetail = urlParams.get('phoneNumber') || urlParams.get('gmailAddress'); 
+                
+                const contactLabel = contactPreference === 'whatsapp' ? 'Nomor Telepon' : contactPreference === 'gmail' ? 'Alamat Gmail' : 'Detail Kontak';
+                
+                const summaryDiv = document.getElementById('summary');
+                if (summaryDiv) {
+                    setTimeout(() => {
+                        summaryDiv.innerHTML = `
+                            <div class="bg-gray-50 p-4 rounded-md">
+                                <h2 class="text-lg font-semibold mb-2">Ringkasan Data</h2>
+                                <p><strong>Nama Lengkap:</strong> ${fullName || 'Tidak tersedia'}</p>
+                                <p><strong>Layanan Dipesan:</strong> ${service || 'Tidak tersedia'}</p> 
+                                <p><strong>${contactLabel}:</strong> ${contactDetail || 'Tidak tersedia'}</p>
+                                <p><strong>Preferensi Kontak:</strong> ${contactPreference === 'gmail' ? 'Gmail' : contactPreference === 'whatsapp' ? 'WhatsApp' : 'Tidak tersedia'}</p>
+                            </div>
+                        `;
+                    }, 500); 
+                    
+                    alert(`Terima kasih, ${fullName}! Pesanan layanan "${service}" Anda telah dikirim. Detail kontak Anda adalah: ${contactDetail}. Kami akan menghubungi Anda segera via ${contactPreference.toUpperCase()}.`);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
